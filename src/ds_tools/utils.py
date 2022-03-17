@@ -8,18 +8,18 @@ def get_variable_types(df: DataFrame) -> dict:
         'Date': [],
         'Symbolic': []
     }
-    for c in df.columns:
-        uniques = df[c].dropna(inplace=False).unique()
+    for column in df.columns:
+        uniques = df[column].dropna(inplace=False).unique()
         if len(uniques) == 2:
-            variable_types['Binary'].append(c)
-            df[c].astype('bool')
-        elif df[c].dtype == 'datetime64':
-            variable_types['Date'].append(c)
-        elif df[c].dtype == 'int':
-            variable_types['Numeric'].append(c)
-        elif df[c].dtype == 'float':
-            variable_types['Numeric'].append(c)
+            variable_types['Binary'].append(column)
+            df[column].astype('bool')
+        elif df[column].dtype == 'datetime64':
+            variable_types['Date'].append(column)
+        elif df[column].dtype == 'int':
+            variable_types['Numeric'].append(column)
+        elif df[column].dtype == 'float':
+            variable_types['Numeric'].append(column)
         else:
-            df[c].astype('category')
-            variable_types['Symbolic'].append(c)
+            df[column].astype('category')
+            variable_types['Symbolic'].append(column)
     return variable_types

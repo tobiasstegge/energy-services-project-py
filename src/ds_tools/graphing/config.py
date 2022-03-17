@@ -3,7 +3,7 @@ import matplotlib.colors as clrs
 
 from cycler import cycler
 
-plt.style.use('./src/data_science_utils/ds_utils.mplstyle')
+plt.style.use('./src/ds_tools/graphing/ds_utils.mplstyle')
 
 my_palette = {'yellow': '#ECD474', 'pale orange': '#E9AE4E', 'salmon': '#E2A36B', 'orange': '#F79522', 'dark orange': '#D7725E',
               'pale acqua': '#92C4AF', 'acqua': '#64B29E', 'marine': '#3D9EA9', 'green': '#10A48A', 'olive': '#99C244',
@@ -17,8 +17,8 @@ colors_live = [my_palette['orange'], my_palette['blue3'], my_palette['olive']]
 blues = [my_palette['pale blue'], my_palette['blue2'], my_palette['blue3'], my_palette['dark blue']]
 oranges = [my_palette['pale orange'], my_palette['salmon'], my_palette['orange'], my_palette['dark orange']]
 
-LINE_COLOR = my_palette['dark blue']
-FILL_COLOR = my_palette['dark blue']
+LINE_COLOR = my_palette['black']
+FILL_COLOR = my_palette['light grey']
 DOT_COLOR = my_palette['blue3']
 ACTIVE_COLORS = [my_palette['dark blue'], my_palette['yellow'], my_palette['pale orange'],
                  my_palette['acqua'], my_palette['pale pink'], my_palette['lavender']]

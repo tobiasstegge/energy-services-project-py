@@ -83,4 +83,11 @@ def plot_line(x_values: list, y_values: list, ax: plt.Axes = None, title: str = 
               percentage: bool = False, rotation: bool = False):
     ax = set_elements(ax=ax, title=title, x_label=x_label, y_label=y_label, percentage=percentage)
     set_locators(x_values, ax=ax, rotation=rotation)
-    ax.plot(x_values, y_values, c=cfg.LINE_COLOR)
+    ax.plot(x_values, y_values, c=cfg.LINE_COLOR, linewidth=1)
+
+
+def calculated_rolling_mean_dev(df):
+    rolling_mean = df.rolling(window=12).mean()
+    rolling_std = df.rolling(window=12).std()
+
+

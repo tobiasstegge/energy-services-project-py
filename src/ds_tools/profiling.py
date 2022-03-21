@@ -1,7 +1,8 @@
-from matplotlib.pyplot import savefig, figure, subplots, title, plot
+from matplotlib.pyplot import savefig, figure, subplots, title, plot, subplots, legend
 from .utils import get_variable_types
 from .graphing.charts import bar_chart, choose_grid, HEIGHT, multiple_bar_chart, plot_line
 from seaborn import heatmap
+from statsmodels.tsa.seasonal import seasonal_decompose
 
 
 def show_dimensionality(df, file_path, file_name=''):
@@ -121,10 +122,57 @@ def show_heatmap(df, file_path, file_name):
     savefig(f'{file_path}/heatmap_{file_name}.png')
 
 
-def plot_timeseries(df, y_label='', file_path='', file_name='', start=None, end=None):
-    figure(figsize=(16, 6))
-    if start and end:
-        plot_line(x_values=df[start:end].index.to_list(), y_values=df[start:end].values, y_label=y_label)
+def plot_timeseries(df, columns, y_labels, file_path='', file_name='', start=None, end=None):
+    fig, ax1 = subplots(figsize=(16, 6))
+    if len(columns) == 1:
+        if start and end:
+            plot_line(x_values=df[start:end].index, y_values=df[columns[0]][start:end], y_label=y_labels[0])
+        else:
+            plot_line(x_values=df.index, y_values=df[columns[0]], x_label='Time', y_label=y_labels[0])
     else:
-        plot_line(x_values=df.to_list(), y_values=df.values(), x_label='Time', y_label=y_label)
+        if start and end:
+            ax1.set_ylabel(y_labels[0], color='tab:red')
+            ax1.plot(df[start:end].index, df[columns[0]][start:end], color='tab:red', linewidth=0.5)
+            ax1.tick_params(axis='y', labelcolor='tab:red')
+            ax2 = ax1.twinx()
+            ax2.set_ylabel(y_labels[1], color='tab:blue')  # we already handled the x-label with ax1
+            ax2.plot(df[start:end].index, df[columns[1]][start:end], color='tab:blue', linewidth=0.5)
+            ax2.tick_params(axis='y', labelcolor='tab:blue')
+        else:
+            fig, ax1 = subplots()
+            ax1.set_ylabel(y_labels[0], color='tab:red')
+            ax1.plot(df.index, df[columns[0]], color='tab:red', linewidth=0.5)
+            ax1.tick_params(axis='y', labelcolor='tab:red')
+            ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+            ax2.set_ylabel(y_labels[1], color='tab:blue')  # we already handled the x-label with ax1
+            ax2.plot(df.index, df[columns[1]], color='tab:blue', linewidth=0.5)
+            ax2.tick_params(axis='y', labelcolor='tab:blue')
     savefig(f'{file_path}/plot_timeseries_{file_name}.png')
+
+
+def plot_rolling_mean_dev(df, column, window, y_label='', file_path='', file_name='', start=None, end=None):
+    figure(figsize=(24, 8))
+    title("Rolling Mean and Standard Deviation")
+    rolling_mean = df[column].rolling(window=window).mean()
+    rolling_std = df[column].rolling(window=window).std()
+    if start and end:
+        plot(df[start:end].index, df[column][start:end], label='original', linewidth=0.5, color='black')
+        plot(df[start:end].index, rolling_mean[start:end], label='red', linewidth=0.5, color='blue')
+        plot(df[start:end].index, rolling_std[start:end], label='std', linewidth=0.5, color='red')
+    else:
+        plot(df.index, df[column], label='original', linewidth=0.5, color='black')
+        plot(df.index, rolling_mean, label='red', linewidth=0.5, color='blue')
+        plot(df.index, rolling_std, label='std', linewidth=0.5, color='red')
+    savefig(f'{file_path}/plot_rolling_mean_{file_name}.png')
+
+
+def plot_seasonal_decompose(df, column, file_path, file_name):
+    figure(figsize=(24, 8))
+    result = seasonal_decompose(df[column], model='additive', period=24)
+    plot(df.index, df[column], linewidth=0.5, color='grey', label='original')
+    plot(df.index, result.seasonal, linewidth=0.5, color='blue', label='seasonal')
+    plot(df.index, result.trend, linewidth=0.5, color='red', label='trend')
+    plot(df.index, result.resid, linewidth=0.5, color='green', label='residual')
+    legend()
+
+    savefig(f'{file_path}/seasonal_decompose_{file_name}.png')

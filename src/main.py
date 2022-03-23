@@ -9,8 +9,6 @@ from ds_tools.time_series_models import arima_model, rendom_forrest_regressor, p
 from ds_tools.utils import split_timeseries
 
 PATH_GRAPHS = './images/profiling'
-PATH_BUILDING_DATA_2017 = './data/IST_South_Tower_2017_Ene_Cons.csv'
-PATH_BUILDING_DATA_2018 = './data/IST_South_Tower_2018_Ene_Cons.csv'
 
 # DATA PREPARATION #
 
@@ -20,21 +18,21 @@ meteo_data = read_csv('./data/IST_meteo_data_2017_2018_2019.csv - IST_meteo_data
 meteo_data['yyyy-mm-dd hh:mm:ss'] = to_datetime(meteo_data['yyyy-mm-dd hh:mm:ss'], format='%Y-%m-%d %H:%M:%S')
 meteo_data = meteo_data.set_index('yyyy-mm-dd hh:mm:ss')
 
-building_data_2017 = read_csv(PATH_BUILDING_DATA_2017)
-building_data_2018 = read_csv(PATH_BUILDING_DATA_2018)
+building_data_2017 = read_csv('./data/IST_South_Tower_2017_Ene_Cons.csv')
+building_data_2018 = read_csv('./data/IST_South_Tower_2018_Ene_Cons.csv')
 building_data_2017['Date_start'] = to_datetime(building_data_2017['Date_start'], format='%d-%m-%Y %H:%M')
 building_data_2018['Date_start'] = to_datetime(building_data_2018['Date_start'], format='%d-%m-%Y %H:%M')
 building_data_2017 = building_data_2017.set_index('Date_start')
 building_data_2018 = building_data_2018.set_index('Date_start')
 
-power_data = concat([building_data_2017, building_data_2018])
+building_data = concat([building_data_2017, building_data_2018])
 
 # resample data and combine into one dataframe
 meteo_data_resample = meteo_data.resample('H', closed='left', label='right')[
     'temp_C', 'HR', 'windSpeed_m/s', 'windGust_m/s', 'pres_mbar',
     'solarRad_W/m2', 'rain_mm/h'].mean()
 meteo_data_resample["rain_day"] = meteo_data.resample('H', closed='left', label='right')['rain_day'].max()
-df = power_data.join(meteo_data_resample)
+df = building_data.join(meteo_data_resample)
 df['holiday'] = where(df.index.to_period('D').astype('datetime64[ns]').isin(holidays), True, False)
 
 # data scaling
@@ -45,7 +43,7 @@ end = datetime(year=2018, month=12, day=31)
 
 # Print info
 df.info()
-# show_dimensionality(df, file_path=PATH_GRAPHS, file_name='building')
+show_dimensionality(df, file_path=PATH_GRAPHS, file_name='building')
 # show_outliers(df, file_path=PATH_GRAPHS, file_name='building')
 # show_distribution(df, file_path=PATH_GRAPHS, file_name='building')
 # show_sparsity(df, file_path=PATH_GRAPHS, file_name='building')

@@ -3,7 +3,7 @@ from matplotlib.dates import AutoDateLocator, AutoDateFormatter
 from matplotlib.font_manager import FontProperties
 from datetime import datetime
 from numpy import arange
-import src.ds_tools.graphing.config as cfg
+from . import config as cfg
 
 FONT_TEXT = FontProperties(size=6)
 TEXT_MARGIN = 0.05

@@ -5,7 +5,6 @@ from datetime import datetime
 from numpy import arange
 import src.ds_tools.graphing.config as cfg
 
-
 FONT_TEXT = FontProperties(size=6)
 TEXT_MARGIN = 0.05
 
@@ -48,7 +47,8 @@ def set_locators(x_values: list, ax: plt.Axes = None, rotation: bool = False):
         ax.set_xticks(x_values)
 
 
-def bar_chart(x_values: list, y_values: list, ax: plt.Axes = None, title: str = '', x_label: str = '', y_label: str = '',
+def bar_chart(x_values: list, y_values: list, ax: plt.Axes = None, title: str = '', x_label: str = '',
+              y_label: str = '',
               percentage: bool = False, rotation: bool = False):
     ax = set_elements(ax=ax, title=title, x_label=x_label, y_label=y_label, percentage=percentage)
     set_locators(x_values, ax=ax, rotation=rotation)
@@ -79,7 +79,8 @@ def multiple_bar_chart(x_values: list, y_values: dict, ax: plt.Axes = None, titl
     ax.legend(legend, fontsize='x-small', title_fontsize='small')
 
 
-def plot_line(x_values: list, y_values: list, ax: plt.Axes = None, title: str = '', x_label: str = '', y_label: str = '',
+def plot_line(x_values: list, y_values: list, ax: plt.Axes = None, title: str = '', x_label: str = '',
+              y_label: str = '',
               percentage: bool = False, rotation: bool = False):
     ax = set_elements(ax=ax, title=title, x_label=x_label, y_label=y_label, percentage=percentage)
     set_locators(x_values, ax=ax, rotation=rotation)
@@ -91,3 +92,15 @@ def calculated_rolling_mean_dev(df):
     rolling_std = df.rolling(window=12).std()
 
 
+def plot_forecasting(train, test, pred, ax=None, x_label: str = 'time', y_label: str = '', file_path: str = '',
+                     file_extension: str = ''):
+    plt.figure(figsize=(24, 10))
+    if ax is None:
+        ax = plt.gca()
+    ax.plot(train, label='train', linewidth=0.5)
+    ax.plot(test, label='test', linewidth=0.5)
+    ax.plot(pred.index, pred.values, label='predicted', color='red', linewidth=1)
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
+    plt.legend()
+    plt.savefig(f'{file_path}/arima_model_{file_extension}.png')

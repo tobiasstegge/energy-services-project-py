@@ -1,4 +1,7 @@
+import math
+
 from pandas import DataFrame
+from sklearn.model_selection import TimeSeriesSplit
 
 
 def get_variable_types(df: DataFrame) -> dict:
@@ -23,3 +26,10 @@ def get_variable_types(df: DataFrame) -> dict:
             df[column].astype('category')
             variable_types['Symbolic'].append(column)
     return variable_types
+
+
+def split_timeseries(df, train_size):
+    split_point = math.floor(len(df) * train_size)
+    train = df[:split_point]
+    test = df[split_point:]
+    return train, test

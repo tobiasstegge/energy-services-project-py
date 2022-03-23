@@ -114,7 +114,6 @@ def show_sparsity(df, file_path, file_name=''):
 def show_heatmap(df, file_path, file_name):
     numeric_vars = get_variable_types(df)['Numeric']
     data_numeric = df[numeric_vars]
-    print("Creating Heatmap for All Numeric")
     figure(figsize=[16, 16])
     corr_mtx = abs(data_numeric.corr())
     heatmap(abs(corr_mtx), xticklabels=corr_mtx.columns, yticklabels=corr_mtx.columns, annot=True, cmap='Blues')
@@ -168,11 +167,10 @@ def plot_rolling_mean_dev(df, column, window, y_label='', file_path='', file_nam
 
 def plot_seasonal_decompose(df, column, file_path, file_name):
     figure(figsize=(24, 8))
-    result = seasonal_decompose(df[column], model='additive', period=24)
+    result = seasonal_decompose(df[column], model='additive', period=len(df)//2)
     plot(df.index, df[column], linewidth=0.5, color='grey', label='original')
     plot(df.index, result.seasonal, linewidth=0.5, color='blue', label='seasonal')
     plot(df.index, result.trend, linewidth=0.5, color='red', label='trend')
     plot(df.index, result.resid, linewidth=0.5, color='green', label='residual')
     legend()
-
     savefig(f'{file_path}/seasonal_decompose_{file_name}.png')

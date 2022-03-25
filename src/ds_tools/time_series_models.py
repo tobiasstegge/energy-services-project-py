@@ -3,9 +3,10 @@ from matplotlib.pyplot import figure, savefig, show
 from sklearn.ensemble import RandomForestRegressor
 from prophet import Prophet
 from pandas import DataFrame, to_datetime
+import contextlib
 
 
-def prophet_auto_ml(timestamp, prediction_variable, holidays=None, file_path='', file_name='', predict_period=0):
+def prophet_auto_ml(timestamp, prediction_variable, holidays=None, predict_period=0):
     holidays = DataFrame({
         'holiday': 'Portugal',
         'ds': holidays,
@@ -21,9 +22,9 @@ def prophet_auto_ml(timestamp, prediction_variable, holidays=None, file_path='',
     future = model.make_future_dataframe(periods=predict_period, freq='H')
     prediction = model.predict(future)
     model.plot(prediction, figsize=(24, 10))
-    savefig(f'{file_path}/prophet_auto_ml_{file_name}.png')
+    #savefig(f'{file_path}/prophet_auto_ml_{file_name}.png')
     model.plot_components(prediction)
-    savefig(f'{file_path}/prophet_auto_ml_components_{file_name}.png')
+    #savefig(f'{file_path}/prophet_auto_ml_components_{file_name}.png')
     prediction = prediction.set_index('ds')
     return prediction['yhat']
 

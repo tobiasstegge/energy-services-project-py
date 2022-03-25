@@ -1,8 +1,11 @@
-from matplotlib.pyplot import savefig, figure, subplots, title, plot, subplots, legend
+from matplotlib.pyplot import savefig, figure, subplots, title, plot, subplots, legend, subplot
 from .utils import get_variable_types
 from .graphing.charts import bar_chart, choose_grid, HEIGHT, multiple_bar_chart, plot_line
 from seaborn import heatmap
 from statsmodels.tsa.seasonal import seasonal_decompose
+from sklearn.decomposition import PCA
+from numpy import cumsum
+from statsmodels.tsa.stattools import adfuller
 
 
 def show_dimensionality(df):
@@ -17,7 +20,15 @@ def show_variable_types(df):
     for tp in types.keys():
         counts[tp] = len(types[tp])
     bar_chart(list(counts.keys()), list(counts.values()), title='Nr of variables per type')
-    #savefig(f'{file_path}/variable_types_{file_name}.png')
+
+
+def show_missing_values(df):
+    figure()
+    missing_values = {}
+    for var in df:
+        amount_missing = df[var].isna().sum()
+        missing_values[var] = amount_missing
+    bar_chart(list(missing_values.keys()), list(missing_values.values()), title='Nr of missing values per variable', rotation=True)
 
 
 def show_distribution(df):
@@ -140,6 +151,7 @@ def plot_timeseries(df, columns, y_labels, start=None, end=None):
             ax2.set_ylabel(y_labels[1], color='tab:blue')
             ax2.plot(df.index, df[columns[1]], color='tab:blue', linewidth=0.5)
             ax2.tick_params(axis='y', labelcolor='tab:blue')
+    legend()
 
 
 def plot_rolling_mean_dev(df, column, window, y_label='', start=None, end=None):
@@ -155,13 +167,36 @@ def plot_rolling_mean_dev(df, column, window, y_label='', start=None, end=None):
         plot(df.index, df[column], label='original', linewidth=0.5, color='black')
         plot(df.index, rolling_mean, label='red', linewidth=0.5, color='blue')
         plot(df.index, rolling_std, label='std', linewidth=0.5, color='red')
+    legend()
 
 
 def plot_seasonal_decompose(df, column):
     figure(figsize=(24, 8))
     result = seasonal_decompose(df[column], model='additive', period=len(df)//2)
-    plot(df.index, df[column], linewidth=0.5, color='grey', label='original')
-    plot(df.index, result.seasonal, linewidth=0.5, color='blue', label='seasonal')
-    plot(df.index, result.trend, linewidth=0.5, color='red', label='trend')
-    plot(df.index, result.resid, linewidth=0.5, color='green', label='residual')
-    legend()
+    subplot(411)
+    plot(df, label='Original', color='black')
+    legend(loc='upper left')
+    subplot(412)
+    plot(result.trend, label='Trend', color='black')
+    legend(loc='upper left')
+    subplot(413)
+    plot(result.seasonal, label='Seasonal', color='black')
+    legend(loc='upper left')
+    subplot(414)
+    plot(result.resid, label='Residual', color='black')
+    legend(loc='upper left')
+
+
+def pca(df, n_components):
+    pca = PCA(n_components=n_components)
+    result = pca.fit_transform(df)
+    features = range(pca.n_components_)
+    bar_chart(features, pca.explained_variance_ratio_, title='PCA Analysis', x_label='features', y_label='% variance explained')
+    plot(cumsum(pca.explained_variance_ratio_), color='black', linewidth=0.5)
+    return result
+
+
+def adfuller_test(df):
+    "if above 0.05, data is not stationary"
+    adf, p_value, usedlag_, nobs_, critical_values_, icbest_ = adfuller(df)
+    return p_value

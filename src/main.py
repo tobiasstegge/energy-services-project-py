@@ -70,7 +70,7 @@ train, test = split_timeseries(df_power, train_size=0.8)
 
 # create auto-ml model for benchmarking - using prophet library from Meta in this case
 prediction_prophet = prophet_auto_ml(timestamp=train.index, prediction_variable=train.values, holidays=holidays,
-                                     file_path=PATH_GRAPHS, file_name='1', predict_period=len(test))
+                                    predict_period=len(test))
 plot_forecasting(train=train, test=test, pred=prediction_prophet, x_label='time', y_label='kW', file_path=PATH_GRAPHS,
                  file_extension='1')
 

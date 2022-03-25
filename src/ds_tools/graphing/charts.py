@@ -92,8 +92,7 @@ def calculated_rolling_mean_dev(df):
     rolling_std = df.rolling(window=12).std()
 
 
-def plot_forecasting(train, test, pred, ax=None, x_label: str = 'time', y_label: str = '', file_path: str = '',
-                     file_extension: str = ''):
+def plot_forecasting(train, test, pred, ax=None, x_label: str = 'time', y_label: str = ''):
     plt.figure(figsize=(24, 10))
     if ax is None:
         ax = plt.gca()
@@ -102,5 +101,4 @@ def plot_forecasting(train, test, pred, ax=None, x_label: str = 'time', y_label:
     ax.plot(pred.index, pred.values, label='predicted', color='red', linewidth=1)
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
-    plt.legend()
-    plt.savefig(f'{file_path}/arima_model_{file_extension}.png')
+    plt.legend(['train', 'test', 'predicted'])

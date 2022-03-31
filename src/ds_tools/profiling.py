@@ -1,3 +1,4 @@
+from re import L
 from matplotlib.pyplot import savefig, figure, subplots, title, plot, subplots, legend, subplot
 from .utils import get_variable_types
 from .graphing.charts import bar_chart, choose_grid, HEIGHT, multiple_bar_chart, plot_line
@@ -154,6 +155,34 @@ def plot_timeseries(df, columns, y_labels, start=None, end=None):
     legend()
 
 
+def scatter_timeseries(df, columns, y_labels, start=None, end=None):
+    fig, ax1 = subplots(figsize=(16, 6))
+    if len(columns) == 1:
+        if start and end:
+            plot_line(x_values=df[start:end].index, y_values=df[columns[0]][start:end], y_label=y_labels[0])
+        else:
+            plot_line(x_values=df.index, y_values=df[columns[0]], x_label='Time', y_label=y_labels[0])
+    else:
+        if start and end:
+            ax1.set_ylabel(y_labels[0], color='tab:red')
+            ax1.scatter(df[start:end].index, df[columns[0]][start:end], color='tab:red')
+            ax1.tick_params(axis='y', labelcolor='tab:red')
+            ax2 = ax1.twinx()
+            ax2.set_ylabel(y_labels[1], color='tab:blue')
+            ax2.scatter(df[start:end].index, df[columns[1]][start:end], color='tab:blue')
+            ax2.tick_params(axis='y', labelcolor='tab:blue')
+        else:
+            fig, ax1 = subplots()
+            ax1.set_ylabel(y_labels[0], color='tab:red')
+            ax1.scatter(df.index, df[columns[0]], color='tab:red', linewidth=0.5)
+            ax1.tick_params(axis='y', labelcolor='tab:red')
+            ax2 = ax1.twinx()
+            ax2.set_ylabel(y_labels[1], color='tab:blue')
+            ax2.scatter(df.index, df[columns[1]], color='tab:blue', linewidth=0.5)
+            ax2.tick_params(axis='y', labelcolor='tab:blue')
+    legend()
+
+
 def plot_rolling_mean_dev(df, column, window, y_label='', start=None, end=None):
     figure(figsize=(24, 8))
     title("Rolling Mean and Standard Deviation")
@@ -174,17 +203,18 @@ def plot_seasonal_decompose(df, column, period):
     figure(figsize=(24, 8))
     result = seasonal_decompose(df[column], model='additive', period=period)
     subplot(411)
-    plot(df, label='Original', color='black')
+    plot(df[column], label='Original', color='black', linewidth=0.5)
     legend(loc='upper left')
     subplot(412)
-    plot(result.trend, label='Trend', color='black')
+    plot(result.trend, label='Trend', color='black', linewidth=0.5)
     legend(loc='upper left')
     subplot(413)
-    plot(result.seasonal, label='Seasonal', color='black')
+    plot(result.seasonal, label='Seasonal', color='black', linewidth=0.5)
     legend(loc='upper left')
     subplot(414)
-    plot(result.resid, label='Residual', color='black')
+    plot(result.resid, label='Residual', color='black', linewidth=0.5)
     legend(loc='upper left')
+
 
 
 def pca(df, n_components):

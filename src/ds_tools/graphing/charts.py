@@ -84,7 +84,7 @@ def plot_line(x_values: list, y_values: list, ax: plt.Axes = None, title: str = 
               percentage: bool = False, rotation: bool = False):
     ax = set_elements(ax=ax, title=title, x_label=x_label, y_label=y_label, percentage=percentage)
     set_locators(x_values, ax=ax, rotation=rotation)
-    ax.plot(x_values, y_values, c=cfg.LINE_COLOR, linewidth=1)
+    ax.plot(x_values, y_values, c=cfg.LINE_COLOR, linewidth=0.5)
 
 
 def calculated_rolling_mean_dev(df):
@@ -96,9 +96,9 @@ def plot_forecasting(train, test, pred, ax=None, x_label: str = 'time', y_label:
     plt.figure(figsize=(24, 10))
     if ax is None:
         ax = plt.gca()
-    ax.plot(train, label='train', linewidth=0.5)
-    ax.plot(test, label='test', linewidth=0.5)
-    ax.plot(pred.index, pred.values, label='predicted', color='red', linewidth=1)
+    ax.plot(train, label='train', linewidth=0.5, color='blue')
+    ax.plot(test, label='test', linewidth=0.5, color='green')
+    ax.plot(pred.index, pred.values, label='predicted', color='yellow', linewidth=0.5)
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     plt.legend(['train', 'test', 'predicted'])

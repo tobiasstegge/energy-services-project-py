@@ -170,9 +170,9 @@ def plot_rolling_mean_dev(df, column, window, y_label='', start=None, end=None):
     legend()
 
 
-def plot_seasonal_decompose(df, column):
+def plot_seasonal_decompose(df, column, period):
     figure(figsize=(24, 8))
-    result = seasonal_decompose(df[column], model='additive', period=len(df)//2)
+    result = seasonal_decompose(df[column], model='additive', period=period)
     subplot(411)
     plot(df, label='Original', color='black')
     legend(loc='upper left')

@@ -122,7 +122,7 @@ def show_heatmap(df):
     data_numeric = df[numeric_vars]
     figure(figsize=[16, 16])
     corr_mtx = abs(data_numeric.corr())
-    heatmap(abs(corr_mtx), xticklabels=corr_mtx.columns, yticklabels=corr_mtx.columns, annot=True, cmap='Blues')
+    heatmap(corr_mtx, xticklabels=corr_mtx.columns, yticklabels=corr_mtx.columns, annot=True, cmap='Blues')
     title('Correlation for Numeric Variables')
 
 

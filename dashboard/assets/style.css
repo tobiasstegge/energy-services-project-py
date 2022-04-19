@@ -1,0 +1,32 @@
+body {
+  font-family: sans-serif;
+  background-color: white;
+  line-height: 1.6;
+}
+
+* {
+  text-align: center;
+}
+
+h1 {
+  margin: 1rem;
+  padding: 2rem;
+  color: white;
+  background-color: rgba(91, 112, 217, 0.994);
+}
+
+h2 {
+  padding: 1rem;
+  margin: 1rem;
+  color: white;
+  background-color: rgb(255, 166, 0);
+}
+
+input[type="radio"] {
+  display: inline;
+}
+
+p {
+  padding: 1rem;
+  margin: 1rem;
+}

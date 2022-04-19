@@ -1,45 +1,65 @@
-from dash import html, Dash, dcc, dependencies, Input, Output, State, callback_context
+from dash import html, Dash, dcc, Input, Output
 import dash_bootstrap_components as dbc
 from pickle import load
 from models import neural_network, gradient_boosting, random_forrest, train_test
 from datetime import datetime
-from math import sqrt
-from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error
+from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
+import plotly.express as px
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-app = Dash(__name__, external_stylesheets=external_stylesheets)
-
+# data
 with open('../data/dataframe_preprocessing.pickle', 'rb') as f:
     prepared_data = load(f)
-
+start = datetime(year=2019, month=1, day=1)
+end = datetime(year=2019, month=4, day=30)
+prepared_data_2019 = prepared_data[start:end]
 MODELS = ['gradient-boosting', 'neural-network', 'random-forrest']
-mae = 0
-mse = 0
-rmse = 0
-mape = 0
 
+# app
+app = Dash(__name__)
 app.layout = html.Div(children=[
-    html.H1(children='IST Energy Monitor - Tobi`s Dashboard'),
-
-    html.Div(children='''
-        Display different features
-    '''),
-
+    html.H1(children="IST Energy Monitor 💻️ Tobi's Dashboard"),
+    html.P('Hello Carlos! 🤓 Welcome to my Dashboard!'),
+    html.P(' This dashboard can be used for a step by step analysis of the data '
+           'and features to select. Special about this dashboard is that different features can be tried '
+           'as the graphs and error metrics update live. This dashboard was styled with love and patience '
+           'by hand using not a single external stylesheet which makes it look a bit boring but still feels '
+           'intuitive and easy to use (function before form). Enjoy! '),
     html.Div([
+        html.H2('Plot raw data'),
+        html.H4('Pick column to display'),
         dcc.Dropdown(
             id='data-select',
-            options=[{'label': i, 'value': i} for i in prepared_data.columns],  # not display index here
-            value='Power_kW'
+            options=[{'label': i, 'value': i} for i in prepared_data.columns],
+            value='Power_kW',
+            style=dict(
+                width='50%',
+                display='inline-block',
+                verticalAlign="middle")
         ),
     ]),
 
+    html.H4('Change plot type'),
+    dcc.RadioItems(
+        id='plot-select',
+        options=[
+            {'label': 'Line Plot', 'value': 'line-plot'},
+            {'label': 'Scatter Plot', 'value': 'scatter-plot'},
+            {'label': 'Box Plot', 'value': 'box-plot'},
+        ],
+        value='line-plot'
+    ),
+
     dcc.Graph(id='yearly-graph'),
 
-    # MODEL #
+    html.H2('Forecasting'),
     html.H3('Choose your features here'),
     html.Div([
         dcc.Dropdown(list(prepared_data.columns)[1:], ['holiday', 'temp_C', 'Power_kW_-1_day'], multi=True,
-                     id='feature-select')
+                     id='feature-select', style=dict(
+                width='90%',
+                display='inline-block',
+                verticalAlign="middle")
+                     )
     ]),
 
     html.H3('Choose your model here'),
@@ -47,21 +67,27 @@ app.layout = html.Div(children=[
         dcc.Dropdown(
             id='model-select',
             options=[{'label': i, 'value': i} for i in MODELS],
-            value='random-forrest'
+            value='random-forrest',
+            style=dict(
+                width='50%',
+                display='inline-block',
+                verticalAlign="middle")
         ),
     ]),
     dcc.Loading(id="loading-icon",
                 type='dot',
                 children=[html.Div(dcc.Graph(id='model-graph'))]),
 
+    html.H2('Error Metrics Evaluation'),
     html.Center([
         dbc.Card(
             [
                 dbc.CardBody(
                     [
-                        html.H4("MSE", className="card-title1"),
-                        html.P(id='mse_output')
-                    ]
+                        html.H3("MSE", className="card-title1"),
+                        html.P(id='mse_output'),
+                    ],
+
                 ),
             ],
             style={"width": "18rem", "border": "2rem", 'display': 'inline-block'},
@@ -70,7 +96,7 @@ app.layout = html.Div(children=[
             [
                 dbc.CardBody(
                     [
-                        html.H4("MAPE", className="card-title2"),
+                        html.H3("MAPE", className="card-title2"),
                         html.P(id='mape_output')
                     ]
                 ),
@@ -84,9 +110,15 @@ app.layout = html.Div(children=[
 
 @app.callback(
     Output('yearly-graph', 'figure'),
-    Input('data-select', 'value'))
-def update_graph(column):
-    return create_data_figure(column)
+    Input('data-select', 'value'),
+    Input('plot-select', 'value'), )
+def update_graph(column, plot_tyoe):
+    if plot_tyoe == 'line-plot':
+        return px.line(prepared_data_2019, x=prepared_data_2019.index, y=column).update_layout(xaxis_title='time')
+    if plot_tyoe == 'box-plot':
+        return px.box(prepared_data_2019, x=column)
+    if plot_tyoe == 'scatter-plot':
+        return px.scatter(prepared_data_2019, x=prepared_data_2019.index, y=column)
 
 
 @app.callback(
@@ -108,7 +140,7 @@ def run_model(feature_select, model_type):
     mse = mean_squared_error(y_true=y_test, y_pred=prediction_data)
     mape = mean_absolute_percentage_error(y_true=y_test, y_pred=prediction_data)
 
-    return create_forecast_figure(prediction_data, y_test), round(mse, 2), f'{str(round(mape * 100,2))}%'
+    return create_forecast_figure(prediction_data, y_test), round(mse, 2), f'{str(round(mape * 100, 2))}%'
 
 
 def create_forecast_figure(prediction_data, real_data):
@@ -118,25 +150,8 @@ def create_forecast_figure(prediction_data, real_data):
             {'x': prediction_data.index.to_list(), 'y': prediction_data[0], 'type': 'line', 'name': 'prediction'}
         ],
         'layout': {
-            'title': 'IST hourly electricity consumption (kWh)',
             'x_label': 'time',
             'y_label': 'power (kW)'
-        }
-    }
-
-
-def create_data_figure(column):
-    start = datetime(year=2019, month=1, day=1)
-    end = datetime(year=2019, month=4, day=30)
-    prepared_data_2019 = prepared_data[start:end]
-    return {
-        'data': [
-            {'x': prepared_data_2019.index, 'y': prepared_data_2019[column], 'type': 'line', 'name': column},
-        ],
-        'layout': {
-            'title': 'Raw Data of 2019 (January - April)',
-            'xaxis_title': 'time',
-            'yaxis_title': column
         }
     }
 

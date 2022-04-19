@@ -32,6 +32,18 @@ df = building_data.join(meteo_data_resample)
 df['holiday'] = where(df.index.to_period('D').astype('datetime64[ns]').isin(holidays), 1, 0)
 df = df.fillna(0)
 
+# add weekend information to dataframe
+df['weekend'] = where(df.index.weekday > 4, 1, 0)
+
+# extract date and time
+df['hour'] = [date.hour for date in df.index]
+df['day'] = [date.day for date in df.index]
+df['month'] = [date.month for date in df.index]
+
+# create feature of last day
+df['Power_kW_-1_day'] = df['Power_kW'].shift(24)
+df = df.fillna(0)
+
 # Save result as pickle to reuse later in dashboard
 with open('../data/dataframe_preprocessing.pickle', 'wb') as f:
     dump(df, f)

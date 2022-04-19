@@ -1,14 +1,22 @@
 from dash import html, Dash, dcc, dependencies, Input, Output, State, callback_context
-from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
+from pickle import load
 from models import neural_network, gradient_boosting, random_forrest, train_test
-import pandas as pd
+from datetime import datetime
+from math import sqrt
+from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-prepared_data = pd.read_csv('../data/full_data_civil_building.csv', index_col=0)
 app = Dash(__name__, external_stylesheets=external_stylesheets)
 
+with open('../data/dataframe_preprocessing.pickle', 'rb') as f:
+    prepared_data = load(f)
+
 MODELS = ['gradient-boosting', 'neural-network', 'random-forrest']
+mae = 0
+mse = 0
+rmse = 0
+mape = 0
 
 app.layout = html.Div(children=[
     html.H1(children='IST Energy Monitor - Tobi`s Dashboard'),
@@ -20,7 +28,7 @@ app.layout = html.Div(children=[
     html.Div([
         dcc.Dropdown(
             id='data-select',
-            options=[{'label': i, 'value': i} for i in prepared_data.columns[1:]],  # not display index here
+            options=[{'label': i, 'value': i} for i in prepared_data.columns],  # not display index here
             value='Power_kW'
         ),
     ]),
@@ -34,6 +42,7 @@ app.layout = html.Div(children=[
                      id='feature-select')
     ]),
 
+    html.H3('Choose your model here'),
     html.Div([
         dcc.Dropdown(
             id='model-select',
@@ -41,7 +50,6 @@ app.layout = html.Div(children=[
             value='random-forrest'
         ),
     ]),
-    html.Button('Run Model', id='run-model', n_clicks=0),
     dcc.Loading(id="loading-icon",
                 type='dot',
                 children=[html.Div(dcc.Graph(id='model-graph'))]),
@@ -52,10 +60,7 @@ app.layout = html.Div(children=[
                 dbc.CardBody(
                     [
                         html.H4("MSE", className="card-title1"),
-                        html.P(
-                            "Test",
-                            className="mse-text",
-                        )
+                        html.P(id='mse_output')
                     ]
                 ),
             ],
@@ -65,11 +70,8 @@ app.layout = html.Div(children=[
             [
                 dbc.CardBody(
                     [
-                        html.H4("MSE", className="card-title2"),
-                        html.P(
-                            "Test",
-                            className="mse-text",
-                        )
+                        html.H4("MAPE", className="card-title2"),
+                        html.P(id='mape_output')
                     ]
                 ),
             ],
@@ -86,46 +88,55 @@ app.layout = html.Div(children=[
 def update_graph(column):
     return create_data_figure(column)
 
+
 @app.callback(
-    Output('model-graph', 'figure'),
-    Input('feature-select', 'value'),
-    Input('model-select', 'value'),
-    Input('run-model', 'n_clicks'))
-def run_model(feature_select, model_type, n_clicks):
-    if n_clicks > 0:
-        print(n_clicks)
-        print(model_type)
-        print(feature_select)
-        prediction_data = ''
-        if model_type == 'random-forrest':
-            x_train, y_train, x_test, y_test = train_test(prepared_data, features=feature_select)
-            prediction_data = random_forrest(x_train, y_train, x_test, y_test)
-        else:
-            print("Error")
+    [Output('model-graph', 'figure'),
+     Output('mse_output', 'children'),
+     Output('mape_output', 'children')],
+    [Input('feature-select', 'value'),
+     Input('model-select', 'value')])
+def run_model(feature_select, model_type):
+    prediction_data = ''
+    x_train, y_train, x_test, y_test = train_test(prepared_data, features=feature_select)
+    if model_type == 'random-forrest':
+        prediction_data = random_forrest(x_train, y_train, x_test, y_test)
+    if model_type == 'gradient-boosting':
+        prediction_data = gradient_boosting(x_train, y_train, x_test, y_test)
+    if model_type == 'neural-network':
+        prediction_data = neural_network(x_train, y_train, x_test, y_test)
 
-        return create_forecast_figure(prediction_data)
-    else:
-        raise PreventUpdate
+    mse = mean_squared_error(y_true=y_test, y_pred=prediction_data)
+    mape = mean_absolute_percentage_error(y_true=y_test, y_pred=prediction_data)
+
+    return create_forecast_figure(prediction_data, y_test), round(mse, 2), f'{str(round(mape * 100,2))}%'
 
 
-def create_forecast_figure(prediction_data):
+def create_forecast_figure(prediction_data, real_data):
     return {
         'data': [
-            {'x': prediction_data.index.to_list(), 'y': prediction_data[0], 'type': 'line', 'name': 'power'},
+            {'x': real_data.index.to_list(), 'y': real_data['Power_kW'], 'type': 'line', 'name': 'actual'},
+            {'x': prediction_data.index.to_list(), 'y': prediction_data[0], 'type': 'line', 'name': 'prediction'}
         ],
         'layout': {
-            'title': 'IST hourly electricity consumption (kWh)'
+            'title': 'IST hourly electricity consumption (kWh)',
+            'x_label': 'time',
+            'y_label': 'power (kW)'
         }
     }
 
 
 def create_data_figure(column):
+    start = datetime(year=2019, month=1, day=1)
+    end = datetime(year=2019, month=4, day=30)
+    prepared_data_2019 = prepared_data[start:end]
     return {
         'data': [
-            {'x': prepared_data.index, 'y': prepared_data[column], 'type': 'line', 'name': column},
+            {'x': prepared_data_2019.index, 'y': prepared_data_2019[column], 'type': 'line', 'name': column},
         ],
         'layout': {
-            'title': 'Data'
+            'title': 'Raw Data of 2019 (January - April)',
+            'xaxis_title': 'time',
+            'yaxis_title': column
         }
     }
 
